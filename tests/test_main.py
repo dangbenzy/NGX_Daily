@@ -41,6 +41,22 @@ class MoversParsingTest(unittest.TestCase):
         self.assertEqual([item["symbol"] for item in gainers], ["CCC", "AAA"])
         self.assertEqual([item["symbol"] for item in losers], ["BBB"])
 
+    def test_supports_ngn_market_company_change_field(self):
+        payload = {
+            "success": True,
+            "data": {
+                "data": [
+                    {"symbol": "AAA", "price": "10", "price_change_percent": "7.5"},
+                    {"symbol": "BBB", "price": "11", "price_change_percent": "-2.25"},
+                ]
+            },
+        }
+
+        gainers, losers = extract_movers(payload, 5)
+
+        self.assertEqual(gainers[0]["symbol"], "AAA")
+        self.assertEqual(losers[0]["symbol"], "BBB")
+
 
 class MessageFormattingTest(unittest.TestCase):
     def test_formats_message_with_sections(self):

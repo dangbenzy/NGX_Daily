@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 
 
 NGN_MARKET_BASE_URL = os.getenv("NGN_MARKET_BASE_URL", "https://api.ngnmarket.com/v1")
-NGN_MARKET_MOVERS_PATH = os.getenv("NGN_MARKET_MOVERS_PATH", "/market/movers")
+NGN_MARKET_COMPANIES_PATH = os.getenv("NGN_MARKET_COMPANIES_PATH", "/companies")
 LAGOS_TZ = ZoneInfo("Africa/Lagos")
 DEFAULT_USER_AGENT = os.getenv(
     "HTTP_USER_AGENT",
@@ -123,6 +123,7 @@ def normalize_mover(item: dict[str, Any]) -> dict[str, Any]:
             "percent_change",
             "percentage_change",
             "pct_change",
+            "price_change_percent",
             "changePercentage",
         ),
     )
@@ -183,10 +184,10 @@ def extract_movers(payload: dict[str, Any], limit: int) -> tuple[list[dict[str, 
     return gainers[:limit], losers[:limit]
 
 
-def fetch_movers(api_key: str, limit: int) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
+def fetch_ngn_market_movers(api_key: str, limit: int) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
     base_url = NGN_MARKET_BASE_URL.rstrip("/")
-    path = "/" + NGN_MARKET_MOVERS_PATH.strip("/")
-    query = urlencode({"limit": limit})
+    path = "/" + NGN_MARKET_COMPANIES_PATH.strip("/")
+    query = urlencode({"limit": 200, "sort": "price_change_percent", "order": "desc"})
     url = f"{base_url}{path}?{query}"
     payload = get_json(url, headers={"Authorization": f"Bearer {api_key}"})
 
@@ -195,10 +196,28 @@ def fetch_movers(api_key: str, limit: int) -> tuple[list[dict[str, Any]], list[d
         message = error.get("message") if isinstance(error, dict) else None
         raise BotError(f"NGN Market API returned an error: {message or payload}")
 
-    gainers, losers = extract_movers(payload, limit)
+    data = unwrap_data(payload)
+    if not isinstance(data, list):
+        raise BotError("No companies list found in NGN Market response")
+
+    movers = [normalize_mover(item) for item in data if isinstance(item, dict)]
+    movers = [item for item in movers if item["change_percent"] is not None]
+    gainers = sorted(
+        [item for item in movers if item["change_percent"] > 0],
+        key=lambda item: item["change_percent"],
+        reverse=True,
+    )
+    losers = sorted(
+        [item for item in movers if item["change_percent"] < 0],
+        key=lambda item: item["change_percent"],
+    )
     if not gainers and not losers:
         raise BotError("No gainers or losers found in NGN Market response")
-    return gainers, losers, payload
+    return gainers[:limit], losers[:limit], payload
+
+
+def fetch_movers(limit: int) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
+    return fetch_ngn_market_movers(require_env("NGN_MARKET_API_KEY"), limit)
 
 
 def money(value: Decimal | None) -> str:
@@ -232,12 +251,35 @@ def response_last_updated(payload: dict[str, Any]) -> str | None:
     if isinstance(data, dict):
         candidates.extend(
             data.get(key)
-            for key in ("last_updated", "lastUpdated", "updated_at", "updatedAt", "date")
+            for key in (
+                "last_updated",
+                "lastUpdated",
+                "updated_at",
+                "updatedAt",
+                "date",
+                "trade_date",
+                "tradeDate",
+            )
         )
+    if isinstance(data, list):
+        for item in data:
+            if isinstance(item, dict):
+                candidates.extend(
+                    item.get(key)
+                    for key in ("trade_date", "tradeDate", "updated_at", "updatedAt")
+                )
     candidates.extend(
         payload.get(key)
         for key in ("last_updated", "lastUpdated", "updated_at", "updatedAt", "date")
     )
+    stocks = payload.get("stocks")
+    if isinstance(stocks, list):
+        for item in stocks:
+            if isinstance(item, dict):
+                candidates.extend(
+                    item.get(key)
+                    for key in ("trade_date", "tradeDate", "updated_at", "updatedAt")
+                )
     for value in candidates:
         if value:
             return str(value)
@@ -317,11 +359,10 @@ def main() -> int:
     except ValueError:
         raise BotError("BOT_LIMIT must be a positive integer")
 
-    api_key = require_env("NGN_MARKET_API_KEY")
     bot_token = require_env("TELEGRAM_BOT_TOKEN")
     chat_id = require_env("TELEGRAM_CHAT_ID")
 
-    gainers, losers, payload = fetch_movers(api_key, limit)
+    gainers, losers, payload = fetch_movers(limit)
 
     if is_true(os.getenv("SKIP_STALE_DATA", "true")) and has_stale_data(payload):
         print(f"Skipping send because market data is stale: {response_last_updated(payload)}")

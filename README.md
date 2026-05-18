@@ -4,7 +4,7 @@ A small scheduled bot that fetches Nigerian Exchange (NGX) end-of-day market mov
 
 ## What It Does
 
-- Fetches NGX market movers from NGN Market API.
+- Fetches NGX companies from NGN Market's free `/companies` endpoint.
 - Formats the top 5 gainers and top 5 losers.
 - Sends the message to Telegram.
 - Runs every weekday after NGX market close through GitHub Actions.
@@ -65,7 +65,7 @@ That is **4:45 PM WAT**.
 | Variable | Default | Description |
 | --- | --- | --- |
 | `NGN_MARKET_BASE_URL` | `https://api.ngnmarket.com/v1` | API base URL |
-| `NGN_MARKET_MOVERS_PATH` | `/market/movers` | Movers endpoint path |
+| `NGN_MARKET_COMPANIES_PATH` | `/companies` | Free company list endpoint path |
 | `BOT_LIMIT` | `5` | Number of gainers and losers |
 | `DRY_RUN` | `false` | Print message instead of sending |
 | `SKIP_STALE_DATA` | `true` | Skip sending if the API exposes an older data date |
@@ -73,10 +73,10 @@ That is **4:45 PM WAT**.
 
 ## Troubleshooting
 
-If GitHub Actions fails with:
+If `/market/movers` fails with:
 
 ```text
-HTTP 403: error code: 1010
+PLAN_REQUIRED
 ```
 
-the request is being blocked before NGN Market returns API data. The bot sends a normal `User-Agent` header, but if the provider blocks GitHub-hosted runners, run the same script from another scheduler such as Cloudflare Workers, Render, Railway, or a small VPS.
+the NGN Market `/market/movers` endpoint is not available on the free plan. This bot uses the free `/companies` endpoint and computes the top gainers and losers locally.
