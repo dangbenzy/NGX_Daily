@@ -1,0 +1,32 @@
+name: NGX EOD Telegram Bot
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "45 15 * * 1-5"
+
+jobs:
+  send-eod-update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run tests
+        run: python -m unittest discover -s tests
+
+      - name: Send Telegram update
+        env:
+          NGN_MARKET_API_KEY: ${{ secrets.NGN_MARKET_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python main.py
