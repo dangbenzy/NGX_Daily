@@ -69,3 +69,14 @@ That is **4:45 PM WAT**.
 | `BOT_LIMIT` | `5` | Number of gainers and losers |
 | `DRY_RUN` | `false` | Print message instead of sending |
 | `SKIP_STALE_DATA` | `true` | Skip sending if the API exposes an older data date |
+| `HTTP_USER_AGENT` | `NGX-Daily-Bot/1.0...` | User agent sent to APIs |
+
+## Troubleshooting
+
+If GitHub Actions fails with:
+
+```text
+HTTP 403: error code: 1010
+```
+
+the request is being blocked before NGN Market returns API data. The bot sends a normal `User-Agent` header, but if the provider blocks GitHub-hosted runners, run the same script from another scheduler such as Cloudflare Workers, Render, Railway, or a small VPS.

@@ -13,6 +13,10 @@ from zoneinfo import ZoneInfo
 NGN_MARKET_BASE_URL = os.getenv("NGN_MARKET_BASE_URL", "https://api.ngnmarket.com/v1")
 NGN_MARKET_MOVERS_PATH = os.getenv("NGN_MARKET_MOVERS_PATH", "/market/movers")
 LAGOS_TZ = ZoneInfo("Africa/Lagos")
+DEFAULT_USER_AGENT = os.getenv(
+    "HTTP_USER_AGENT",
+    "NGX-Daily-Bot/1.0 (+https://github.com/dangbenzy/NGX_Daily)",
+)
 
 
 class BotError(Exception):
@@ -27,7 +31,12 @@ def require_env(name: str) -> str:
 
 
 def get_json(url: str, headers: dict[str, str] | None = None) -> dict[str, Any]:
-    request = Request(url, headers=headers or {}, method="GET")
+    request_headers = {
+        "Accept": "application/json",
+        "User-Agent": DEFAULT_USER_AGENT,
+    }
+    request_headers.update(headers or {})
+    request = Request(url, headers=request_headers, method="GET")
     try:
         with urlopen(request, timeout=30) as response:
             body = response.read().decode("utf-8")
@@ -52,7 +61,11 @@ def post_json(url: str, payload: dict[str, Any]) -> dict[str, Any]:
     request = Request(
         url,
         data=data,
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "User-Agent": DEFAULT_USER_AGENT,
+        },
         method="POST",
     )
     try:
