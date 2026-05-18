@@ -3,7 +3,7 @@ name: NGX EOD Telegram Bot
 on:
   workflow_dispatch:
   schedule:
-    - cron: "45 15 * * 1-5"
+    - cron: "0 17 * * 1-5"
 
 jobs:
   send-eod-update:

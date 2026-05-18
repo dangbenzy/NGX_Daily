@@ -9,7 +9,7 @@ A small scheduled bot that fetches Nigerian Exchange (NGX) end-of-day market mov
 - Sends the message to Telegram.
 - Runs every weekday after NGX market close through GitHub Actions.
 
-The default schedule is **4:45 PM WAT, Monday-Friday**.
+The default schedule is **6:00 PM WAT, Monday-Friday**.
 
 ## Required Secrets
 
@@ -55,10 +55,10 @@ python main.py
 The scheduled workflow uses UTC:
 
 ```yaml
-cron: "45 15 * * 1-5"
+cron: "0 17 * * 1-5"
 ```
 
-That is **4:45 PM WAT**.
+That is **6:00 PM WAT**.
 
 ## Optional Environment Variables
 
