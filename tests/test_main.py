@@ -71,6 +71,7 @@ class MessageFormattingTest(unittest.TestCase):
         self.assertIn("1. AAA N10.00 +2.50%", message)
         self.assertIn("1. BBB N5.00 -1.25%", message)
         self.assertIn("Not financial advice.", message)
+        self.assertRegex(message, r"EOD - \d{2} [A-Z][a-z]{2} \d{4}$")
 
 
 class DateParsingTest(unittest.TestCase):

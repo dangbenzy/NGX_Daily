@@ -330,7 +330,7 @@ def format_message(
             title,
             format_section("Top 5 Gainers", gainers),
             format_section("Top 5 Losers", losers),
-            f"{data_line}\nNot financial advice.",
+            f"{data_line}\nNot financial advice.\nEOD - {now:%d %b %Y}",
         ]
     )
 
