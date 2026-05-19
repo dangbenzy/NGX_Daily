@@ -7,9 +7,19 @@ A small scheduled bot that fetches Nigerian Exchange (NGX) end-of-day market mov
 - Fetches NGX companies from NGN Market's free `/companies` endpoint.
 - Formats the top 5 gainers and top 5 losers.
 - Sends the message to Telegram.
-- Runs every weekday after NGX market close through GitHub Actions.
+- Can be run manually through GitHub Actions as a backup.
 
-The default schedule is **6:00 PM WAT, Monday-Friday**.
+The production schedule is handled by the Cloudflare Worker.
+
+## Cloudflare Worker Option
+
+The repo also includes a Cloudflare Python Worker version for more punctual scheduling:
+
+- `cloudflare/worker.py`
+- `wrangler.toml`
+- `CLOUDFLARE.md`
+
+Use the Cloudflare version once you are ready to move away from GitHub Actions scheduling delays.
 
 ## Required Secrets
 
@@ -44,21 +54,13 @@ $env:DRY_RUN="false"
 python main.py
 ```
 
-## GitHub Actions Setup
+## GitHub Actions Manual Backup
 
 1. Create a GitHub repository.
 2. Push these files.
 3. Go to `Settings -> Secrets and variables -> Actions`.
 4. Add the three required secrets.
-5. Go to `Actions -> NGX EOD Telegram Bot -> Run workflow` for a manual test.
-
-The scheduled workflow uses UTC:
-
-```yaml
-cron: "0 17 * * 1-5"
-```
-
-That is **6:00 PM WAT**.
+5. Go to `Actions -> NGX EOD Telegram Bot -> Run workflow` for a manual backup run.
 
 ## Optional Environment Variables
 

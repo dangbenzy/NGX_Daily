@@ -1,0 +1,13 @@
+name = "ngx-daily-telegram-bot"
+main = "cloudflare/worker.py"
+compatibility_date = "2026-05-19"
+compatibility_flags = [ "python_workers" ]
+
+[vars]
+BOT_LIMIT = "5"
+NGN_MARKET_BASE_URL = "https://api.ngnmarket.com/v1"
+NGN_MARKET_COMPANIES_PATH = "/companies"
+
+[triggers]
+crons = [ "0 16 * * MON-FRI" ]
+

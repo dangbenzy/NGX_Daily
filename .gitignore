@@ -2,4 +2,6 @@
 *.pyc
 __pycache__/
 .pytest_cache/
-
+.wrangler/
+.dev.vars
+python_modules/
